@@ -134,3 +134,150 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+@media (max-width: 600px) {
+            .container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-cloud-upload-alt"></i> Dexter Web Deploy</h1>
+        
+        <form id="deploy-form">
+            <div class="form-group">
+                <i class="fas fa-file-archive"></i>
+                <label>ZIP ෆයිල් තෝරන්න</label>
+                <input type="file" id="zip-file" accept=".zip" required>
+            </div>
+
+            <div class="form-group">
+                <i class="fab fa-github"></i>
+                <label>GitHub Repository නම</label>
+                <input type="text" id="repo-name" placeholder="e.g. my-awesome-website" required>
+            </div>
+
+            <div class="form-group">
+                <i class="fab fa-whatsapp"></i>
+                <label>WhatsApp අංකය</label>
+                <input type="tel" id="whatsapp-number" placeholder="e.g. 94712345678" required>
+            </div>
+
+            <button type="submit" class="btn">
+                <i class="fas fa-rocket"></i> වෙබ් සයිට් Deploy කරන්න
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing... කරුණාකර රැඳී සිටින්න...</p>
+        </div>
+
+        <div class="result" id="result">
+            <h3>✅ Deploy සාර්ථකයි!</h3>
+            <p>GitHub Pages URL: <a href="#" id="github-link" target="_blank"></a></p>
+            <p>WhatsApp දැනුම් දීම: <span id="whatsapp-status">යවමින් පවතී...</span></p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script>
+        const GITHUB_TOKEN = '';
+
+        document.getElementById('deploy-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const githubLink = document.getElementById('github-link');
+            const whatsappStatus = document.getElementById('whatsapp-status');
+
+            loading.style.display = 'block';
+            result.style.display = 'none';
+
+            const zipFile = document.getElementById('zip-file').files[0];
+            const repoName = document.getElementById('repo-name').value;
+            const whatsappNumber = document.getElementById('whatsapp-number').value;
+
+            try {
+                // Repository Creation
+                const repoResponse = await fetch('https://api.github.com/user/repos', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token ${GITHUB_TOKEN},
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: repoName,
+                        private: false,
+                    }),
+                });
+
+                const repoData = await repoResponse.json();
+
+                // ZIP File Processing
+                const zip = new JSZip();
+                const content = await zip.loadAsync(zipFile);
+
+                // File Upload
+                for (const path in content.files) {
+                    const file = content.files[path];
+                    if (!file.dir) {
+                        const fileContent = await file.async('base64');
+                        const fileName = path.split('/').pop();
+
+                        await fetch(https://api.github.com/repos/${repoData.owner.login}/${repoName}/contents/${fileName}, {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': token ${GITHUB_TOKEN},'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                message: Add ${fileName},
+                                content: fileContent,
+                                branch: 'gh-pages',
+                            }),
+                        });
+                    }
+                }
+
+                // Enable GitHub Pages
+                await fetch(https://api.github.com/repos/${repoData.owner.login}/${repoName}/pages, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token ${GITHUB_TOKEN},
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        source: {
+                            branch: 'gh-pages',
+                            path: '/'
+                        }
+                    })
+                });
+
+                // GitHub Pages URL
+                const githubPageUrl = https://${repoData.owner.login}.github.io/${repoName}/;
+                
+                // WhatsApp Notification
+                const whatsappResponse = await fetch(
+                    https://dexter-whatsapp-bot-request.onrender.com/send-message?number=${whatsappNumber}&message=${encodeURIComponent(🚀 Your website is live: ${githubPageUrl})}
+                );
+
+                loading.style.display = 'none';
+                result.style.display = 'block';
+                
+                githubLink.href = githubPageUrl;
+                githubLink.textContent = githubPageUrl;
+                whatsappStatus.textContent = whatsappResponse.ok ? '✅ සාර්ථකව යවන දී' : '❌ යැවීමේ දෝෂයක්';
+
+            } catch (error) {
+                console.error(error);
+                loading.style.display = 'none';
+                alert('දෝෂයක් සිදු විය. කරුණාකර නැවත උත්සාහ කරන්න.');
+            }
+        });
+    </script>
+</body>
+</html>
