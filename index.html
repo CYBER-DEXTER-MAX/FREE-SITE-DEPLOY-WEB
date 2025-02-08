@@ -89,7 +89,7 @@
                 const repoResponse = await fetch('https://api.github.com/user/repos', {
                     method: 'POST',
                     headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Authorization': `token ${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}`,
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
@@ -114,7 +114,7 @@
                         await fetch(`https://api.github.com/repos/${repoData.owner.login}/${repoName}/contents/${fileName}`, {
                             method: 'PUT',
                             headers: {
-                                'Authorization': `token ${GITHUB_TOKEN}`,
+                                'Authorization': `token ${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}`,
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
@@ -130,7 +130,7 @@
                 await fetch(`https://api.github.com/repos/${repoData.owner.login}/${repoName}/pages`, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Authorization': `token ${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}`,
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
